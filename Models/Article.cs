@@ -12,6 +12,6 @@ namespace TestniZadatak.Models
       public string measurementUnit { get; set; }
       public float price { get; set; }
 
-      public string attributes { get; set; }
+      public string attributesJson { get; set; }
    }
 }

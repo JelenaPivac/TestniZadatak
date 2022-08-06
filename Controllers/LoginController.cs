@@ -33,6 +33,13 @@ namespace TestniZadatak.Controllers
          return NotFound("User not found!");
       }
 
+      [HttpDelete]
+      public IActionResult Logout() {
+         return Ok("Logged out");
+
+      }
+
+
       private string GenerateToken(User user) {
          var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
          var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
@@ -44,7 +51,7 @@ namespace TestniZadatak.Controllers
             new Claim(ClaimTypes.MobilePhone, user.phoneNumber),
             new Claim("password",user.password),
             new Claim("attributes",user.definedAttributes),
-            new Claim("articles", user.articles),   
+            new Claim("articles", user.articleIdsJson),   
             new Claim(ClaimTypes.NameIdentifier, user.id.ToString())
          };
 

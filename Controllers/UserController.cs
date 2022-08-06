@@ -39,7 +39,7 @@ namespace TestniZadatak.Controllers
                phoneNumber = claims.FirstOrDefault((x) => x.Type == ClaimTypes.MobilePhone)?.Value,
                password = claims.FirstOrDefault((X) => X.Type == "password")?.Value,
                definedAttributes = claims.FirstOrDefault((x) => x.Type == "attributes")?.Value,
-               articles = claims.FirstOrDefault((x)=>x.Type == "articles")?.Value,
+               articleIdsJson = claims.FirstOrDefault((x)=>x.Type == "articles")?.Value,
                id = Guid.Parse(claims.FirstOrDefault((x)=>x.Type== ClaimTypes.NameIdentifier)?.Value)
             };
          }
@@ -47,8 +47,14 @@ namespace TestniZadatak.Controllers
          return null;
       }
 
+      [Authorize]
       [HttpPost("AddAttributeDefinition")]
       public async Task<IActionResult> AddNewAttirbute(string name) {
+         if(_context.AttributeDefinitions.FirstOrDefault((x)=>x.name == name) != null) {
+            return BadRequest("An Attribute with the name already exists");
+         }
+
+
          var attribute = new AttributeDefinition() {
             name = name,
             id = Guid.NewGuid()
@@ -86,7 +92,7 @@ namespace TestniZadatak.Controllers
             phoneNumber = phone,
             password = password,
             definedAttributes = "",
-            articles=""
+            articleIdsJson=""
          };
          await _context.User.AddAsync(newUser);
          await _context.SaveChangesAsync();

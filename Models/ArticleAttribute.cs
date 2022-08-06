@@ -6,7 +6,7 @@ namespace TestniZadatak.Models
    {
       [Key]
       public Guid Id { get; set; }
-      public AttributeDefinition name { get; set; }
+      public AttributeDefinition definition { get; set; }
       public string value { get; set; }
    }
 }
