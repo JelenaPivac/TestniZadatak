@@ -186,6 +186,8 @@ namespace TestniZadatak.Controllers
 
                _context.User.Update(user);
                await _context.SaveChangesAsync();
+
+               return Ok("Article added");
             }
             return BadRequest("Timedout");
          }

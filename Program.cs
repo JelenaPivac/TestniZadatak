@@ -4,6 +4,9 @@ using TestniZadatak.Data;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +18,25 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ApplicationDBContext>((x)=>x.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options => {
+   options.Events = new JwtBearerEvents() {
+      OnTokenValidated = context => {
+         var dbcontext = context.HttpContext.RequestServices.GetRequiredService<ApplicationDBContext>();
+         var _bearer_token = context.HttpContext.Request.Headers[HeaderNames.Authorization].ToString().Replace("Bearer ", "");
+
+         var tokenValidation = dbcontext.TokenValidation.FirstOrDefault((x) => x.token == _bearer_token);
+         if(tokenValidation != null) {
+            if(tokenValidation.isValid)
+               return Task.CompletedTask;
+            else {
+               context.Fail("Invaild token");
+               return Task.CompletedTask;
+            }
+         }
+         context.Fail("Invalid Token");
+         return Task.CompletedTask;
+      }
+   };
+   
    options.TokenValidationParameters = new TokenValidationParameters() {
       ValidateIssuer = true,
       ValidateAudience = true,

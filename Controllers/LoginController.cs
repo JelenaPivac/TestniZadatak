@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Net.Http.Headers;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -22,25 +23,39 @@ namespace TestniZadatak.Controllers
          _configuration = configuration;
       }
 
+
       [AllowAnonymous]
       [HttpPost]
-      public IActionResult Login(UserLogin userLogin) {
+      public async Task<IActionResult> Login(UserLogin userLogin) {
          var user = _context.User.FirstOrDefault((x) => x.email == userLogin.email && x.password == userLogin.password);
          if(user != null) {
-            var token = GenerateToken(user);
+            var token = await GenerateToken(user);
             return Ok(token);
          }
          return NotFound("User not found!");
       }
 
+      [Authorize]
       [HttpDelete]
-      public IActionResult Logout() {
-         return Ok("Logged out");
+      public async Task<IActionResult> Logout() {
+         var _bearer_token = Request.Headers[HeaderNames.Authorization].ToString().Replace("Bearer ", "");
 
+         if(_bearer_token != null) {
+            var tokenValidation = _context.TokenValidation.FirstOrDefault((x) => x.token == _bearer_token);
+            tokenValidation.isValid = false;
+
+            _context.TokenValidation.Update(tokenValidation);
+            await _context.SaveChangesAsync();
+            return Ok("Logged out");
+         }
+
+
+
+         return BadRequest("Something went wrong");
       }
 
 
-      private string GenerateToken(User user) {
+      private async Task<string> GenerateToken(User user) {
          var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
          var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
@@ -51,8 +66,8 @@ namespace TestniZadatak.Controllers
             new Claim(ClaimTypes.MobilePhone, user.phoneNumber),
             new Claim("password",user.password),
             new Claim("attributes",user.definedAttributes),
-            new Claim("articles", user.articleIdsJson),   
-            new Claim(ClaimTypes.NameIdentifier, user.id.ToString())
+            new Claim("articles", user.articleIdsJson),
+            new Claim(ClaimTypes.NameIdentifier, user.id.ToString()),
          };
 
          var token = new JwtSecurityToken(_configuration["Jwt:Issuer"],
@@ -61,7 +76,15 @@ namespace TestniZadatak.Controllers
             expires: DateTime.Now.AddMinutes(15),
             signingCredentials: credentials);
 
-         return new JwtSecurityTokenHandler().WriteToken(token);
+
+         var tokenString =  new JwtSecurityTokenHandler().WriteToken(token);
+         await _context.TokenValidation.AddAsync(new LoginValidation() {
+            token = tokenString,
+            isValid = true
+         });
+         await _context.SaveChangesAsync();
+
+         return tokenString;
       }
    }
 }

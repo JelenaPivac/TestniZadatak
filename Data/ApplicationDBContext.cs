@@ -13,5 +13,7 @@ namespace TestniZadatak.Data
       public DbSet<Article> Article { get; set; }
 
       public DbSet<AttributeDefinition> AttributeDefinitions { get; set; }
+
+      public DbSet<LoginValidation> TokenValidation { get; set; }
    }
 }
