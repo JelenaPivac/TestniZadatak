@@ -25,7 +25,7 @@ namespace TestniZadatak.Controllers
 
 
       [AllowAnonymous]
-      [HttpPost]
+      [HttpPost("Login")]
       public async Task<IActionResult> Login(UserLogin userLogin) {
          var user = _context.User.FirstOrDefault((x) => x.email == userLogin.email && x.password == userLogin.password);
          if(user != null) {
@@ -36,7 +36,7 @@ namespace TestniZadatak.Controllers
       }
 
       [Authorize]
-      [HttpDelete]
+      [HttpDelete("Logout")]
       public async Task<IActionResult> Logout() {
          var _bearer_token = Request.Headers[HeaderNames.Authorization].ToString().Replace("Bearer ", "");
 
@@ -60,14 +60,7 @@ namespace TestniZadatak.Controllers
          var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
          var claims = new[] {
-            new Claim(ClaimTypes.GivenName,user.firstName),
-            new Claim(ClaimTypes.Surname,user.lastName),
-            new Claim(ClaimTypes.Email, user.email),
-            new Claim(ClaimTypes.MobilePhone, user.phoneNumber),
-            new Claim("password",user.password),
-            new Claim("attributes",user.definedAttributes),
-            new Claim("articles", user.articleIdsJson),
-            new Claim(ClaimTypes.NameIdentifier, user.id.ToString()),
+            new Claim("id", user.id.ToString()),
          };
 
          var token = new JwtSecurityToken(_configuration["Jwt:Issuer"],

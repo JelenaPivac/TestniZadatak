@@ -28,20 +28,13 @@ namespace TestniZadatak.Controllers
 
       private User GetCurrentUser() {
          var identity = HttpContext.User.Identity as ClaimsIdentity;
-         
+
          if(identity != null) {
             var claims = identity.Claims;
 
-            return new User() {
-               email = claims.FirstOrDefault((x) => x.Type == ClaimTypes.Email)?.Value,
-               firstName = claims.FirstOrDefault((x) => x.Type == ClaimTypes.GivenName)?.Value,
-               lastName = claims.FirstOrDefault((x) => x.Type == ClaimTypes.Surname)?.Value,
-               phoneNumber = claims.FirstOrDefault((x) => x.Type == ClaimTypes.MobilePhone)?.Value,
-               password = claims.FirstOrDefault((X) => X.Type == "password")?.Value,
-               definedAttributes = claims.FirstOrDefault((x) => x.Type == "attributes")?.Value,
-               articleIdsJson = claims.FirstOrDefault((x)=>x.Type == "articles")?.Value,
-               id = Guid.Parse(claims.FirstOrDefault((x)=>x.Type== ClaimTypes.NameIdentifier)?.Value)
-            };
+            var id = Guid.Parse(claims.FirstOrDefault((x) => x.Type == "id")?.Value);
+
+            return _context.User.FirstOrDefault((x) => x.id == id);
          }
 
          return null;
@@ -61,13 +54,9 @@ namespace TestniZadatak.Controllers
          };
          await _context.AttributeDefinitions.AddAsync(attribute);
          var currentUser = GetCurrentUser();
-         
-         
-         if(string.IsNullOrEmpty(currentUser.definedAttributes)) {
-            currentUser.definedAttributes = "[" + attribute.id.ToString() +"]";
-         } else {
-            currentUser.definedAttributes =  currentUser.definedAttributes.Insert(currentUser.definedAttributes.Length-1,"," + attribute.id.ToString());
-         }
+
+         currentUser.attributeDefinitions.Add(attribute);
+
          _context.User.Update(currentUser);
          await _context.SaveChangesAsync();
 
@@ -91,8 +80,6 @@ namespace TestniZadatak.Controllers
             email = email,
             phoneNumber = phone,
             password = password,
-            definedAttributes = "",
-            articleIdsJson=""
          };
          await _context.User.AddAsync(newUser);
          await _context.SaveChangesAsync();

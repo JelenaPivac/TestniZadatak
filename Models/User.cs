@@ -12,8 +12,8 @@ namespace TestniZadatak.Models
       public string phoneNumber { get; set; }
       public string password { get; set; }
 
-      public string articleIdsJson { get; set; }
-
-      public string definedAttributes { get; set; }
+      public virtual ICollection<AttributeDefinition> attributeDefinitions { get; set; }
+   
+      public virtual ICollection<Article> articles { get; set; }
    }
 }

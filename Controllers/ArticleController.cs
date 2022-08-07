@@ -63,23 +63,20 @@ namespace TestniZadatak.Controllers
          if(article == null || attributeDefinition == null)
             return NotFound();
 
-         var articleAttributes = JsonSerializer.Deserialize < List<ArticleAttribute>>(article.attributesJson);
-         var attributeExists = articleAttributes.FirstOrDefault((x) => x.definition.id == attributeId) != null;
+         var attributeExists = article.attributes.FirstOrDefault((x) => x.definition.id == attributeId) != null;
          if(attributeExists) {
             return BadRequest(string.Format("Attribute {0} already added on the article!", attributeId));
          }
 
-         var json = JsonSerializer.Serialize(new ArticleAttribute() {
-            Id = Guid.NewGuid(),
+         var attribute = new ArticleAttribute() {
+            articleId = articleId,
             definition = attributeDefinition,
+            Id = Guid.NewGuid(),
             value = attributeValue
-         });
+         };
 
-         if(string.IsNullOrEmpty(article.attributesJson)) {
-            article.attributesJson = "[" + json +"]";
-         } else {
-            article.attributesJson = article.attributesJson.Insert(article.attributesJson.Length - 1, ","+json);
-         }
+         await _context.Attributes.AddAsync(attribute);
+         article.attributes.Add(attribute);
 
          _context.Article.Update(article);
          await _context.SaveChangesAsync();
@@ -89,14 +86,12 @@ namespace TestniZadatak.Controllers
       [Authorize]
       [HttpGet("GetAttributes")]
       public async Task<IActionResult> GetArticleAttributes(Guid articleId) {
-         Article article = _context.Article.FirstOrDefault((x) => x.id == articleId);
+         Article article = _context.Article.AsEnumerable().FirstOrDefault((x) => x.id == articleId);
 
          if(article == null)
             return NotFound("Not found");
 
-         List<ArticleAttribute> attributes = JsonSerializer.Deserialize(article.attributesJson,typeof(List<ArticleAttribute>)) as List<ArticleAttribute>;
-
-         return Ok(JsonSerializer.Serialize(attributes));
+         return Ok(JsonSerializer.Serialize(article.attributes));
       }
 
 
@@ -137,53 +132,48 @@ namespace TestniZadatak.Controllers
       [Authorize]
       [HttpGet("FilterByAttribute")]
       public async Task<IActionResult> FilterByAttribute(Guid attributeDefinitionId, string value) {
-         var articles = _context.Article.AsEnumerable().Where(x => {
-            var attributes = JsonSerializer.Deserialize<List<ArticleAttribute>>(x.attributesJson);
-            var attribute = attributes.FirstOrDefault((x) => x.definition.id == attributeDefinitionId);
+         var articles = _context.Article.ToList();
+         var filteredArticles= articles.Where(x => {
+             var attribute = x.attributes.FirstOrDefault((x) => x.definition.id == attributeDefinitionId);
 
-            if(attribute == null) 
-               return false;
+             if(attribute == null)
+                return false;
 
-            return attribute.value == value;
-         });
-
-         if(articles.Count() == 0)
+             return attribute.value == value;
+          });
+         if(filteredArticles == null || filteredArticles.Count() == 0)
             return NotFound();
 
 
 
-         return Ok(JsonSerializer.Serialize(articles.ToList(),serializeOptions));
+         return Ok(JsonSerializer.Serialize(filteredArticles.ToList(),serializeOptions));
       }
 
       [Authorize]
       [HttpPost("Create")]
       public async Task<IActionResult> Create(string name, string measurementUnit, float price) {
-         Article article = new Article() {
-            id = Guid.NewGuid(),
-            name = name,
-            measurementUnit = measurementUnit,
-            price = price,
-            attributesJson = ""
-         };
-
-         await _context.Article.AddAsync(article);
-         await _context.SaveChangesAsync();
 
          var identity = HttpContext.User.Identity as ClaimsIdentity;
 
          if(identity != null) {
             var claims = identity.Claims;
             if(claims != null) {
-               var id = claims.FirstOrDefault((x) => x.Type == ClaimTypes.NameIdentifier)?.Value;
+               var id = claims.FirstOrDefault((x) => x.Type == "id")?.Value;
                var user = _context.User.FirstOrDefault((x) => x.id == Guid.Parse(id));
-               if(string.IsNullOrEmpty(user.articleIdsJson)) {
-                  user.articleIdsJson = JsonSerializer.Serialize(new List<Guid> { article.id });
-               }else {
-                  var articleIds = JsonSerializer.Deserialize<List<Guid>>(user.articleIdsJson);
-                  articleIds.Add(article.id);
-                  user.articleIdsJson = JsonSerializer.Serialize(articleIds);
-               }
 
+
+               Article article = new Article() {
+                  id = Guid.NewGuid(),
+                  name = name,
+                  measurementUnit = measurementUnit,
+                  price = price,
+                  userId = Guid.Parse(id)
+               };
+
+               await _context.Article.AddAsync(article);
+               await _context.SaveChangesAsync();
+
+               user.articles.Add(article);
                _context.User.Update(user);
                await _context.SaveChangesAsync();
 

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TestniZadatak.Models
 {
@@ -7,5 +8,10 @@ namespace TestniZadatak.Models
       [Key]
       public Guid id { get; set; }
       public string name { get; set; }
+
+      [ForeignKey("User")]
+      public Guid userId { get; set; }
+
+
    }
 }

@@ -12,6 +12,9 @@ namespace TestniZadatak.Models
       public string measurementUnit { get; set; }
       public float price { get; set; }
 
-      public string attributesJson { get; set; }
+      public virtual ICollection<ArticleAttribute> attributes { get; set; }
+
+      [ForeignKey("User")]
+      public Guid userId { get; set; }
    }
 }

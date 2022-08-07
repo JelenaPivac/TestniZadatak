@@ -12,8 +12,8 @@ using TestniZadatak.Data;
 namespace TestniZadatak.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    [Migration("20220806123632_tokenValidation")]
-    partial class tokenValidation
+    [Migration("20220807184046_added_no_actiona")]
+    partial class added_no_actiona
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -30,10 +30,6 @@ namespace TestniZadatak.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("attributesJson")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("measurementUnit")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -45,9 +41,39 @@ namespace TestniZadatak.Migrations
                     b.Property<float>("price")
                         .HasColumnType("real");
 
+                    b.Property<Guid>("userId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("id");
 
+                    b.HasIndex("userId");
+
                     b.ToTable("Article");
+                });
+
+            modelBuilder.Entity("TestniZadatak.Models.ArticleAttribute", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("articleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("definitionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("value")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("articleId");
+
+                    b.HasIndex("definitionId");
+
+                    b.ToTable("attributes");
                 });
 
             modelBuilder.Entity("TestniZadatak.Models.AttributeDefinition", b =>
@@ -60,7 +86,12 @@ namespace TestniZadatak.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("userId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("id");
+
+                    b.HasIndex("userId");
 
                     b.ToTable("AttributeDefinitions");
                 });
@@ -83,14 +114,6 @@ namespace TestniZadatak.Migrations
                     b.Property<Guid>("id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("articleIdsJson")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("definedAttributes")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("email")
                         .IsRequired()
@@ -115,6 +138,52 @@ namespace TestniZadatak.Migrations
                     b.HasKey("id");
 
                     b.ToTable("User");
+                });
+
+            modelBuilder.Entity("TestniZadatak.Models.Article", b =>
+                {
+                    b.HasOne("TestniZadatak.Models.User", null)
+                        .WithMany("articles")
+                        .HasForeignKey("userId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TestniZadatak.Models.ArticleAttribute", b =>
+                {
+                    b.HasOne("TestniZadatak.Models.Article", null)
+                        .WithMany("attributes")
+                        .HasForeignKey("articleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TestniZadatak.Models.AttributeDefinition", "definition")
+                        .WithMany()
+                        .HasForeignKey("definitionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("definition");
+                });
+
+            modelBuilder.Entity("TestniZadatak.Models.AttributeDefinition", b =>
+                {
+                    b.HasOne("TestniZadatak.Models.User", null)
+                        .WithMany("attributeDefinitions")
+                        .HasForeignKey("userId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TestniZadatak.Models.Article", b =>
+                {
+                    b.Navigation("attributes");
+                });
+
+            modelBuilder.Entity("TestniZadatak.Models.User", b =>
+                {
+                    b.Navigation("articles");
+
+                    b.Navigation("attributeDefinitions");
                 });
 #pragma warning restore 612, 618
         }
