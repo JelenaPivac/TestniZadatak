@@ -43,7 +43,9 @@ namespace TestniZadatak.Controllers
 
          if(article == null)
             return NotFound("Article not found");
-
+         foreach(var attribute in article.attributes) {
+            _context.Attributes.Remove(attribute);
+         }
          _context.Article.Remove(article);
          await _context.SaveChangesAsync();
 
