@@ -68,6 +68,11 @@ namespace TestniZadatak.Controllers
          if(dbArticle == null)
             return NotFound("Article not found");
 
+         dbArticle.price = article.price;
+         dbArticle.attributes = article.attributes;
+         dbArticle.measurementUnit = article.measurementUnit;
+         dbArticle.name = article.name;
+
          _context.Article.Update(dbArticle);
          await _context.SaveChangesAsync();
 

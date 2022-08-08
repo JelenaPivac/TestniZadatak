@@ -43,7 +43,8 @@ namespace TestniZadatak.Controllers
       [Authorize]
       [HttpPost("AddAttributeDefinition")]
       public async Task<IActionResult> AddNewAttirbute(string name) {
-         if(_context.AttributeDefinitions.FirstOrDefault((x)=>x.name == name) != null) {
+         var currentUserId = GetCurrentUser().id;
+         if(_context.AttributeDefinitions.FirstOrDefault((x)=>x.name == name && x.userId == currentUserId) != null) {
             return BadRequest("An Attribute with the name already exists");
          }
 
