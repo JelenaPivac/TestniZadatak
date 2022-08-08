@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace TestniZadatak.Migrations
 {
-    public partial class added_no_actiona : Migration
+    public partial class final : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -78,25 +78,25 @@ namespace TestniZadatak.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "attributes",
+                name: "Attributes",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    definitionId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    definitionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     value = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     articleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_attributes", x => x.Id);
+                    table.PrimaryKey("PK_Attributes", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_attributes_Article_articleId",
+                        name: "FK_Attributes_Article_articleId",
                         column: x => x.articleId,
                         principalTable: "Article",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_attributes_AttributeDefinitions_definitionId",
+                        name: "FK_Attributes_AttributeDefinitions_definitionId",
                         column: x => x.definitionId,
                         principalTable: "AttributeDefinitions",
                         principalColumn: "id",
@@ -114,20 +114,20 @@ namespace TestniZadatak.Migrations
                 column: "userId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_attributes_articleId",
-                table: "attributes",
+                name: "IX_Attributes_articleId",
+                table: "Attributes",
                 column: "articleId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_attributes_definitionId",
-                table: "attributes",
+                name: "IX_Attributes_definitionId",
+                table: "Attributes",
                 column: "definitionId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "attributes");
+                name: "Attributes");
 
             migrationBuilder.DropTable(
                 name: "TokenValidation");

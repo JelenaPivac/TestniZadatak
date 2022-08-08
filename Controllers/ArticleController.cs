@@ -30,7 +30,17 @@ namespace TestniZadatak.Controllers
       [HttpDelete("Delete")]
       public async Task<IActionResult> DeleteArticle(Guid articleId) {
          Article article = _context.Article.FirstOrDefault((x) => x.id == articleId);
-         
+
+         var userId = GetUserId();
+
+         if(userId != null) {
+            if(userId.Value != article.userId) {
+               return BadRequest("Article doesnt belong to the user logged in");
+            }
+         } else {
+            return BadRequest("Couldn't find logged in user");
+         }
+
          if(article == null)
             return NotFound("Article not found");
 
@@ -45,6 +55,16 @@ namespace TestniZadatak.Controllers
       public async Task<IActionResult> UpdateArticle(Article article) {
          Article dbArticle = _context.Article.FirstOrDefault((x) => x.id == article.id);
 
+         var userId = GetUserId();
+
+         if(userId != null) {
+            if(userId.Value != article.userId) {
+               return BadRequest("Article doesnt belong to the user logged in");
+            }
+         } else {
+            return BadRequest("Couldn't find logged in user");
+         }
+
          if(dbArticle == null)
             return NotFound("Article not found");
 
@@ -56,16 +76,27 @@ namespace TestniZadatak.Controllers
 
       [Authorize]
       [HttpPost("AddNewAttribute")]
-      public async Task<IActionResult> AddAttributeToArticle(Guid articleId, Guid attributeId, string attributeValue) {
+      public async Task<IActionResult> AddAttributeToArticle(Guid articleId, Guid definitionId, string attributeValue) {
          Article article = _context.Article.FirstOrDefault((x) => x.id == articleId);
-         AttributeDefinition attributeDefinition = _context.AttributeDefinitions.FirstOrDefault(x => x.id == attributeId);
+         AttributeDefinition attributeDefinition = _context.AttributeDefinitions.FirstOrDefault(x => x.id == definitionId);
 
          if(article == null || attributeDefinition == null)
             return NotFound();
 
-         var attributeExists = article.attributes.FirstOrDefault((x) => x.definition.id == attributeId) != null;
+
+         var userId = GetUserId();
+
+         if(userId != null) {
+            if(userId.Value != article.userId || userId.Value != attributeDefinition.userId) {
+               return BadRequest("Article or attribute definition doesnt belong to the user logged in");
+            }
+         } else {
+            return BadRequest("Couldn't find logged in user");
+         }
+
+         var attributeExists = article.attributes.FirstOrDefault((x) => x.definition.id == definitionId) != null;
          if(attributeExists) {
-            return BadRequest(string.Format("Attribute {0} already added on the article!", attributeId));
+            return BadRequest(string.Format("Attribute {0} already added on the article!", definitionId));
          }
 
          var attribute = new ArticleAttribute() {
@@ -80,7 +111,7 @@ namespace TestniZadatak.Controllers
 
          _context.Article.Update(article);
          await _context.SaveChangesAsync();
-         return Ok("oke je");
+         return Ok("Attribute added");
       }
 
       [Authorize]
@@ -99,7 +130,8 @@ namespace TestniZadatak.Controllers
       [Authorize]
       [HttpGet("FilterByName")]
       public async Task<IActionResult> FilterByName(string name) {
-         var articles = _context.Article.Where((x) => x.name == name);
+         var userId = GetUserId();
+         var articles = _context.Article.Where((x) => x.name == name && x.userId == userId);
          
          if(articles.Count() == 0)
             return NotFound();
@@ -110,7 +142,8 @@ namespace TestniZadatak.Controllers
       [Authorize]
       [HttpGet("FilterByPrice")]
       public async Task<IActionResult> FilterByprice(float price) {
-         var articles = _context.Article.Where((x) => x.price == price);
+         var userId = GetUserId();
+         var articles = _context.Article.Where((x) => x.price == price && x.userId == userId);
 
          if(articles.Count() == 0)
             return NotFound();
@@ -121,7 +154,8 @@ namespace TestniZadatak.Controllers
       [Authorize]
       [HttpGet("FilterByMeasurementUnit")]
       public async Task<IActionResult> FilterByMeasurmentUnit(string unit) {
-         var articles = _context.Article.Where((x) => x.measurementUnit == unit);
+         var userId = GetUserId();
+         var articles = _context.Article.Where((x) => x.measurementUnit == unit && x.userId == userId);
 
          if(articles.Count() == 0)
             return NotFound();
@@ -132,8 +166,9 @@ namespace TestniZadatak.Controllers
       [Authorize]
       [HttpGet("FilterByAttribute")]
       public async Task<IActionResult> FilterByAttribute(Guid attributeDefinitionId, string value) {
+         var userId = GetUserId();
          var articles = _context.Article.ToList();
-         var filteredArticles= articles.Where(x => {
+         var filteredArticles= articles.Where(x=>x.userId == userId).Where(x => {
              var attribute = x.attributes.FirstOrDefault((x) => x.definition.id == attributeDefinitionId);
 
              if(attribute == null)
@@ -184,5 +219,19 @@ namespace TestniZadatak.Controllers
          return Ok("Article added");
       }
 
+      private Guid? GetUserId() {
+
+         var identity = HttpContext.User.Identity as ClaimsIdentity;
+
+         if(identity != null) {
+            var claims = identity.Claims;
+
+            return Guid.Parse(claims.FirstOrDefault((x) => x.Type == "id")?.Value);
+
+         }
+
+         return null;
+      }
    }
+
 }

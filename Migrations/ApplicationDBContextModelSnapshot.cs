@@ -98,7 +98,7 @@ namespace TestniZadatak.Migrations
             modelBuilder.Entity("TestniZadatak.Models.LoginValidation", b =>
                 {
                     b.Property<string>("token")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<bool>("isValid")
                         .HasColumnType("bit");

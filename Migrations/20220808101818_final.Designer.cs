@@ -12,8 +12,8 @@ using TestniZadatak.Data;
 namespace TestniZadatak.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    [Migration("20220807184046_added_no_actiona")]
-    partial class added_no_actiona
+    [Migration("20220808101818_final")]
+    partial class final
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -61,6 +61,7 @@ namespace TestniZadatak.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("definitionId")
+                        .IsRequired()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("value")
@@ -73,7 +74,7 @@ namespace TestniZadatak.Migrations
 
                     b.HasIndex("definitionId");
 
-                    b.ToTable("attributes");
+                    b.ToTable("Attributes");
                 });
 
             modelBuilder.Entity("TestniZadatak.Models.AttributeDefinition", b =>
@@ -160,7 +161,8 @@ namespace TestniZadatak.Migrations
                     b.HasOne("TestniZadatak.Models.AttributeDefinition", "definition")
                         .WithMany()
                         .HasForeignKey("definitionId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("definition");
                 });
